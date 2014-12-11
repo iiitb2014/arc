@@ -1,11 +1,5 @@
 $(document).ready(function(){
   var ID = new Date().getTime();
-  function IDchange(){
-    var id = document.getElementById("user").innerHTML;
-    if(id===ID){
-      document.getElementById("user").innerHTML="Me";
-    }
-  };
   $("#submit").click(function(){
       var text = $("#text").val();
       $("#text").val('');

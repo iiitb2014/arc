@@ -10,7 +10,7 @@
 #include<signal.h>
 #include<fcntl.h>
 
-#define CONNMAX 1000
+#define CONNMAX 1000000
 #define BYTES 1024
 char *ROOT;
 int listenfd, clients[CONNMAX];
@@ -74,7 +74,12 @@ int main(int argc, char* argv[])
       }
     }
     printf("%d here\n",slot);
-    while (clients[slot]!=-1) slot = (slot+1)%CONNMAX;
+    while (clients[slot]!=-1)
+    {
+      slot = slot+1;
+      if(slot==CONNMAX)
+        slot = 0;
+    }
   }
   delete("chat");
   return 0;
