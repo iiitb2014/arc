@@ -20,11 +20,7 @@ void respond(int);
 int updateFile(char *msg);
 int main(int argc, char* argv[])
 {
-  //setting the values of exesting to zero
   int loop;
-  //    for(loop=0;loop<1000;loop++)
-  //		existing[loop]=0;
-  //exesting set to zero
   struct sockaddr_in clientaddr;
   socklen_t addrlen;
   char c;
@@ -126,12 +122,27 @@ void startServer(char *port)
 int updateFile(char *msg)
 {
   char *file_name = "chat";
-  //file_name[0] = 97+x;
-  //file_name[1]='\0';
   if(msg[0]!='\0'){
     FILE *in;
     in=fopen(file_name,"a+");
-    fprintf(in,"%s\n",msg);
+    char tmp[999];
+    char *tmpID = strtok(msg,"&");
+    char *tmptext = strtok(NULL,"&");
+    char *tmptime = strtok(NULL, "\0");
+    char *ID = strtok(tmpID,"=");
+    ID = strtok(NULL,"\0");
+    char *text = strtok(tmptext,"=");
+    text = strtok(NULL,"\0");
+    char *time = strtok(tmptime,"=");
+    time = strtok(NULL,"\0");
+    strcpy(tmp,"<li class=\"msg\"><span id=\"user\">");
+    strcat(tmp,ID);
+    strcat(tmp,"</span>");
+    strcat(tmp,text);
+    strcat(tmp,"<span class=\"right\">");
+    strcat(tmp,time);
+    strcat(tmp,"</span>");
+    fprintf(in,"%s\n",tmp);
     fclose(in);
     return 1;
   }
