@@ -1,5 +1,16 @@
 $(document).ready(function(){
   var ID = new Date().getTime();
+  function IDchange(){
+	$('li').each(function(){
+		var currid = $(this).find("#user").text();
+		if(currid==ID){
+			$(this).find("#user").text("Me");
+		}
+		else {
+			$(this).find("#user").text("Stranger");
+		}
+	});
+  };
   $("#submit").click(function(){
       var text = $("#text").val();
       $("#text").val('');
