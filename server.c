@@ -10,7 +10,7 @@
 #include<signal.h>
 #include<fcntl.h>
 
-#define CONNMAX 100
+#define CONNMAX 1000000
 #define BYTES 1024
 char *ROOT;
 int listenfd, clients[CONNMAX];
@@ -204,15 +204,15 @@ char *formatPOST(char *msg){
 	char *tmp = (char*)malloc(999);
 	char *tmpID = strtok(msg,"&");
     	char *tmptext = strtok(NULL,"&");
-	if(strcmp(tmptext,"\0")==0){
-		strcpy(tmp,"\0");
-		return tmp;
-	}
     	char *tmptime = strtok(NULL, "\0");
     	char *ID = strtok(tmpID,"=");
     	ID = strtok(NULL,"\0");
     	char *text = strtok(tmptext,"=");
     	text = strtok(NULL,"\0");
+	if(strcmp(text,"%")==0){
+		strcpy(tmp,"%");
+		return tmp;
+	}
     	char *time = strtok(tmptime,"=");
     	time = strtok(NULL,"\0");
 	snprintf(tmp,999,"<li class=\"msg\"><span id=\"user\">%s</span>%s<span class=\"right\">%s</span>",ID,text,time);
@@ -227,7 +227,7 @@ int updateFile(int connect_id, char *msg)
     in=fopen(filename,"a+");
     //tmp = ;
     char *tmp = formatPOST(msg);
-    if(strcmp(tmp,"\0")!=0)
+    if(strcmp(tmp,"%")!=0)
 	    fprintf(in,"%s\n",tmp);
     fclose(in);
     return 1;

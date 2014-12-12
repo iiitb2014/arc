@@ -1,20 +1,6 @@
 $(document).ready(function(){
   var ID = new Date().getTime();
-  (function poll() {
-    var dataS = "$ID=" + ID;
-    setTimeout(function () {
-      $.ajax({
-        type: 'GET',
-        url: 'chat',
-	data: dataS,
-        success: function (result) {
-          $("#chatbox").html(result);
-          IDchange();
-        },
-        complete: poll
-      });
-    }, 5000);
-  })();
+  setInterval(function () {$("#submit").click();}, 8000);
   function IDchange(){
 	$('li').each(function(){
 		var currid = $(this).find("#user").text();
@@ -32,13 +18,14 @@ $(document).ready(function(){
       var currentdate = new Date();
       var timestr = currentdate.getHours() + ":" + currentdate.getMinutes() + ":" + currentdate.getSeconds();
       // Returns successful data submission message when the entered information is stored in database.
-      var dataString = '$ID='+ ID +'&text='+ text + '&time=' + timestr;
       if(text=='')
       {
-        alert("Please Fill All Fields");
+        //alert("Please Fill All Fields");
+	text = '%'
       }
-      else
-      {
+      var dataString = '$ID='+ ID +'&text='+ text + '&time=' + timestr;
+      //else
+      //{
         // AJAX Code To Submit Form.
         $.ajax({
           type: 'POST',
@@ -50,7 +37,7 @@ $(document).ready(function(){
             IDchange();
           }
         });
-      }
+      //}
     return false;
   });
 });
