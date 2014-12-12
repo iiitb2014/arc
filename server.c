@@ -10,14 +10,15 @@
 #include<signal.h>
 #include<fcntl.h>
 
-#define CONNMAX 1000000
+#define CONNMAX 100
 #define BYTES 1024
 char *ROOT;
 int listenfd, clients[CONNMAX];
 void error(char *);
 void startServer(char *);
 void respond(int);
-int updateFile(char *msg);
+void Connected();
+int updateFile(int connect_id,char *msg);
 int main(int argc, char* argv[])
 {
   int loop;
@@ -74,12 +75,7 @@ int main(int argc, char* argv[])
       }
     }
     printf("%d here\n",slot);
-    while (clients[slot]!=-1)
-    {
-      slot = slot+1;
-      if(slot==CONNMAX)
-        slot = 0;
-    }
+    while (clients[slot]!=-1) slot = (slot+1)%CONNMAX;
   }
   delete("chat");
   return 0;
@@ -123,31 +119,116 @@ void startServer(char *port)
   }
 }
 
-//function which creates & updates the file
-int updateFile(char *msg)
+int pushID(char *string)
+	{
+	int i=0;
+  char str[999];
+  FILE *in = fopen("users","a+");
+	while(fscanf(in,"%s",str)==1)
+		if(strcmp(str,string)==0)
+			return -1;
+  fprintf(in,"%s\n",string);
+  fclose(in);
+  in = fopen("users","r");
+  for(i=0;fscanf(in,"%s\n",str)==1;++i);
+  fclose(in);
+  if(i>1)
+  {
+    Connected();
+    remove("users");
+  }
+  return 0;
+	}
+//spilts the id based on delimitor
+int found(char *u_id,char *it)
 {
-  char *file_name = "chat";
+  char *s;
+  s=strtok(u_id,"-");
+  if(strcmp(s,it)==0)
+    return 1;
+  else
+  {
+    s=strtok(NULL,"-");
+    if(strcmp(s,it)==0)
+      return 1;
+  }
+  return 0;
+}
+
+//searches the unique array for the id given
+int getConnected(char *item)
+{
+  int i=0;
+  char str[999];
+  FILE *in = fopen("connected-users","r");
+	while(fscanf(in,"%s",str)==1)
+  {
+    if (found(str,item))
+	    return i;
+    i++;
+  }
+  return -1;
+}
+
+//adds concatenated id's to the unique_id array
+void Connected()
+{
+  FILE *in = fopen("users","r");
+  FILE *out = fopen("connected-users","a+");
+  char ID1[999], ID2[999];
+  fscanf(in,"%s\n",ID1);
+  fscanf(in,"%s\n",ID2);
+	fprintf(out,"%s-%s\n",ID1,ID2);
+  fclose(in);
+  fclose(out);
+}
+
+char *getFilename(int connect_id){
+	char *filename = (char*)malloc(20);
+	snprintf(filename,20,"chat%d",connect_id);
+	return filename;
+}
+
+char *getID(char *msg)
+{	
+	char *tmp = (char*)malloc(999);
+	char *tmpID = strtok(msg,"&");
+    	char *ID = strtok(tmpID,"=");
+    	ID = strtok(NULL,"\0");
+	strcpy(tmp,ID);
+	return tmp;
+}
+
+	
+char *formatPOST(char *msg){
+	char *tmp = (char*)malloc(999);
+	char *tmpID = strtok(msg,"&");
+    	char *tmptext = strtok(NULL,"&");
+	if(strcmp(tmptext,"\0")==0){
+		strcpy(tmp,"\0");
+		return tmp;
+	}
+    	char *tmptime = strtok(NULL, "\0");
+    	char *ID = strtok(tmpID,"=");
+    	ID = strtok(NULL,"\0");
+    	char *text = strtok(tmptext,"=");
+    	text = strtok(NULL,"\0");
+    	char *time = strtok(tmptime,"=");
+    	time = strtok(NULL,"\0");
+	snprintf(tmp,999,"<li class=\"msg\"><span id=\"user\">%s</span>%s<span class=\"right\">%s</span>",ID,text,time);
+	return tmp;
+}
+//function which creates & updates the file
+int updateFile(int connect_id, char *msg)
+{
+  char *filename = getFilename(connect_id);
   if(msg[0]!='\0'){
     FILE *in;
-    in=fopen(file_name,"a+");
-    char tmp[999];
-    char *tmpID = strtok(msg,"&");
-    char *tmptext = strtok(NULL,"&");
-    char *tmptime = strtok(NULL, "\0");
-    char *ID = strtok(tmpID,"=");
-    ID = strtok(NULL,"\0");
-    char *text = strtok(tmptext,"=");
-    text = strtok(NULL,"\0");
-    char *time = strtok(tmptime,"=");
-    time = strtok(NULL,"\0");
-    strcpy(tmp,"<li class=\"msg\"><span id=\"user\">");
-    strcat(tmp,ID);
-    strcat(tmp,"</span>");
-    strcat(tmp,text);
-    strcat(tmp,"<span class=\"right\">");
-    strcat(tmp,time);
-    strcat(tmp,"</span>");
-    fprintf(in,"%s\n",tmp);
+    in=fopen(filename,"a+");
+    //tmp = ;
+    char *tmp = formatPOST(msg);
+    if(strcmp(tmp,"\0")!=0)
+	    fprintf(in,"%s\n",tmp);
     fclose(in);
     return 1;
   }
@@ -180,13 +261,35 @@ void respond(int n)
         write(clients[n], "HTTP/1.0 400 Bad Request\n", 25);
       }
       else
-      {
+      {	char str[999];
+	strcpy(str,reqline[1]);
         if ( strncmp(reqline[1], "/\0", 2)==0 )
           reqline[1] = "/index.html";        //Because if no file is specified, index.html will be opened by default (like it happens in APACHE...
-
-        strcpy(path, ROOT);
-        strcpy(&path[strlen(ROOT)], reqline[1]);
-        printf("file: %s\n", path);
+	if(strncmp(str,"/chat",5)==0)
+	{		
+	printf("hello");
+	char *str = strtok(reqline[1],"$");
+        char *req = strtok(NULL, "\0");
+		printf("%s",req);
+		strcpy(str,req);
+		char *ID = getID(req);
+		pushID(ID);
+		printf("\n$%s$\n",str);
+		int connect_id = getConnected(ID);
+          if(connect_id!=-1)
+	  {
+                printf("connect_id=%d",connect_id);
+        	strcpy(path, ROOT);
+	        strcat(path, "/");
+	        strcpy(&path[strlen(ROOT)+1], getFilename(connect_id));
+          }
+	}
+	else
+	{
+		strcpy(path, ROOT);
+		strcpy(&path[strlen(ROOT)], reqline[1]);
+        }
+	printf("file: %s\n", path);
 
         if ( (fd=open(path, O_RDONLY))!=-1 )    //FILE FOUND
         {
@@ -209,9 +312,26 @@ void respond(int n)
       {
         char *str = strtok(NULL,"$");
         char *req = strtok(NULL, "\0");
-        updateFile(req);
+	if(strncmp(reqline[1],"/chat",5)==0)
+	{	printf("el\n");
+		strcpy(str,req);
+		char *ID = getID(req);
+		pushID(ID);
+		int connect_id = getConnected(ID);
+          if(connect_id!=-1)
+	  {
+            printf("connect_id=%d",connect_id);
+	        updateFile(connect_id, str);
+        	strcpy(path, ROOT);
+        	strcat(path, "/");
+	        strcpy(&path[strlen(ROOT)+1], getFilename(connect_id));
+          }
+	}
+	else
+	{
         strcpy(path, ROOT);
         strcpy(&path[strlen(ROOT)], reqline[1]);
+	}
         printf("file: %s\n", path);
         if ( (fd=open(path, O_RDONLY))!=-1 )    //FILE FOUND
         {
