@@ -1,5 +1,20 @@
 $(document).ready(function(){
   var ID = new Date().getTime();
+  (function poll() {
+    var dataS = "$ID=" + ID;
+    setTimeout(function () {
+      $.ajax({
+        type: 'GET',
+        url: 'chat',
+	data: dataS,
+        success: function (result) {
+          $("#chatbox").html(result);
+          IDchange();
+        },
+        complete: poll
+      });
+    }, 5000);
+  })();
   function IDchange(){
 	$('li').each(function(){
 		var currid = $(this).find("#user").text();
@@ -38,18 +53,5 @@ $(document).ready(function(){
       }
     return false;
   });
-  (function poll() {
-    setTimeout(function () {
-      $.ajax({
-        type: 'GET',
-        url: 'chat',
-        success: function (result) {
-          $("#chatbox").html(result);
-          IDchange();
-        },
-        complete: poll
-      });
-    }, 5000);
-  })();
 });
 

@@ -178,7 +178,7 @@ void Connected()
   char ID1[999], ID2[999];
   fscanf(in,"%s\n",ID1);
   fscanf(in,"%s\n",ID2);
-	fprintf(out,"%s-%s\n",ID1,ID2);
+  fprintf(out,"%s-%s\n",ID1,ID2);
   fclose(in);
   fclose(out);
 }
@@ -316,6 +316,7 @@ void respond(int n)
 	{	printf("el\n");
 		strcpy(str,req);
 		char *ID = getID(req);
+		printf("#id = %s \n",ID);
 		pushID(ID);
 		int connect_id = getConnected(ID);
           if(connect_id!=-1)
