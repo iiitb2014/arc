@@ -3,7 +3,7 @@ Arc - Anonymous Random Chat
 
 This chat program creates a one to one chat session where people chat anonymously. The entire chat application is accessible over the web. No user login is required.
 
-Since the entire server site code is in C, with several optimizations, it can be scaled to any level. So with minimal modifications to the code this chat program can be used for large scale production environment.
+Since the entire server site code is in C, with several optimizations, it can be scaled to any level. So with minimal modifications to the code this chat program can be used for large scale production environments.
 
 ## To Get Arc
 
